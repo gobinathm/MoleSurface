@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(npm --version)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Bash(npm create:*)",
+      "Bash(wait)",
+      "Bash(cargo check:*)",
+      "Bash(git commit:*)",
+      "Bash(magick identify:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
