@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import { colors, type Theme } from "../lib/theme";
 
+// Strip ANSI escape codes (colors, cursor movement, etc.)
+// Covers: CSI sequences \x1b[...m, OSC sequences \x1b]...\x07, and bare \x1b sequences
+const ANSI_RE = /\x1b(?:\[[0-9;]*[A-Za-z]|\][^\x07]*\x07|[^[\]])/g;
+const stripAnsi = (s: string) => s.replace(ANSI_RE, "");
+
 interface Props {
   lines: string[];
   theme: Theme;
@@ -13,9 +18,7 @@ export default function Terminal({ lines, theme, minHeight = 200, maxHeight = 48
   const c = colors[theme];
 
   useEffect(() => {
-    if (ref.current) {
-      ref.current.scrollTop = ref.current.scrollHeight;
-    }
+    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
   }, [lines]);
 
   return (
@@ -42,7 +45,7 @@ export default function Terminal({ lines, theme, minHeight = 200, maxHeight = 48
       ) : (
         lines.map((line, i) => (
           <div key={i} style={{ minHeight: "1em" }}>
-            {line || "\u00A0"}
+            {stripAnsi(line) || "\u00A0"}
           </div>
         ))
       )}
