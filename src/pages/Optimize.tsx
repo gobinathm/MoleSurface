@@ -10,6 +10,7 @@ export default function Optimize({ theme }: { theme: Theme }) {
       command="optimize"
       icon={<Zap size={17} />}
       theme={theme}
+      allowAdmin
     />
   );
 }

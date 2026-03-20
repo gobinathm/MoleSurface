@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { colors, getSystemTheme, onThemeChange, type Theme } from "./lib/theme";
 import { isMoleInstalled } from "./lib/mole";
 import TitleBar from "./components/TitleBar";
@@ -32,7 +33,17 @@ export default function App() {
   useEffect(() => {
     const cleanup = onThemeChange(setTheme);
     isMoleInstalled().then(setMoleReady);
-    return cleanup;
+
+    // Handle tray menu navigation (e.g. "Open Settings")
+    const unlistenNav = listen<string>("navigate", (event) => {
+      const target = event.payload as Page;
+      setPage(target);
+    });
+
+    return () => {
+      cleanup();
+      unlistenNav.then(fn => fn());
+    };
   }, []);
 
   // Show nothing while checking

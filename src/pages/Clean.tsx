@@ -10,6 +10,7 @@ export default function Clean({ theme }: { theme: Theme }) {
       command="clean"
       icon={<Trash2 size={17} />}
       theme={theme}
+      allowAdmin
     />
   );
 }
