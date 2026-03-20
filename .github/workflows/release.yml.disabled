@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+            label: arm64
+          - os: macos-14
+            target: x86_64-apple-darwin
+            label: amd64
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.label }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: Build & publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Code signing — set these secrets to enable signed + notarized builds.
+          # Without them the build still works but macOS Gatekeeper will warn on open.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "MoleSurface ${{ github.ref_name }}"
+          releaseBody: |
+            ## MoleSurface ${{ github.ref_name }}
+
+            UI wrapper for [tw93/mole](https://github.com/tw93/mole).
+
+            ### Install
+            Download the `.dmg` for your Mac:
+            - **Apple Silicon (M1/M2/M3/M4)** → `MoleSurface_*_aarch64.dmg`
+            - **Intel Mac** → `MoleSurface_*_x64.dmg`
+
+            MoleSurface will download and install Mole automatically on first launch.
+          releaseDraft: false
+          prerelease: false
+          args: --target ${{ matrix.target }}
