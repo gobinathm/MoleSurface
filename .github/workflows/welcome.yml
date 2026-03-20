@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Welcome first-time contributor (PR)
         if: github.event_name == 'pull_request_target'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: prs } = await github.rest.pulls.list({
@@ -49,7 +49,7 @@ jobs:
 
       - name: Welcome first-time contributor (Issue)
         if: github.event_name == 'issues'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: issues } = await github.rest.issues.listForRepo({
