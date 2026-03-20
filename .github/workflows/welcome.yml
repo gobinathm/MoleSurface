@@ -1,0 +1,81 @@
+name: Welcome
+
+on:
+  pull_request_target:
+    types: [opened]
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome first-time contributor (PR)
+        if: github.event_name == 'pull_request_target'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              head: `${context.payload.pull_request.user.login}:`,
+            });
+
+            const isFirstPR = prs.filter(pr =>
+              pr.user.login === context.payload.pull_request.user.login
+            ).length === 1;
+
+            if (!isFirstPR) return;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `👋 Hey @${context.payload.pull_request.user.login}, welcome to MoleSurface — and thanks for your first PR!
+
+            A maintainer will review it shortly. While you wait, a few things that help move PRs along faster:
+
+            - ✅ Make sure \`npm run build\` and \`cargo check\` both pass locally
+            - 🌗 If it's a UI change, test it in both light and dark mode
+            - 📝 A clear description of *what* changed and *why* helps a lot
+
+            We appreciate you taking the time to contribute! 🚀`,
+            });
+
+      - name: Welcome first-time contributor (Issue)
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              creator: context.payload.issue.user.login,
+            });
+
+            const isFirstIssue = issues.filter(i =>
+              !i.pull_request &&
+              i.user.login === context.payload.issue.user.login
+            ).length === 1;
+
+            if (!isFirstIssue) return;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `👋 Hi @${context.payload.issue.user.login}, thanks for opening your first issue!
+
+            To help us triage it quickly:
+            - **Bug?** Include your macOS version, MoleSurface version, and steps to reproduce.
+            - **Feature request?** Describe the use case and which \`mo\` command it relates to.
+            - **Question?** Consider starting a [Discussion](../../discussions) instead — it's easier to have a conversation there.
+
+            We'll get back to you soon! 🙌`,
+            });
